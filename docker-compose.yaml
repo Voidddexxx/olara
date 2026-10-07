@@ -14,6 +14,9 @@ services:
     build:
       context: dockerfiles
       dockerfile: php.Dockerfile
+      args:
+        UID: "${HOST_UID:-1000}"
+        GID: "${HOST_GID:-1000}"
     volumes:
       - ./src:/var/www/laravel
 
@@ -24,17 +27,30 @@ services:
     env_file:
       - env/mysql.env
 
+  # Файлы, которые создаёт composer (vendor, composer.lock), принадлежат вашему
+  # пользователю, а не root. На машине с другим uid: export HOST_UID=$(id -u) HOST_GID=$(id -g)
   composer:
     build:
       context: dockerfiles
       dockerfile: composer.Dockerfile
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      HOME: /tmp
     volumes:
       - ./src:/var/www/laravel
 
+  # Артисан-команды (make:model, make:migration, ...) создают файлы от вашего
+  # пользователя. На машине с другим uid: export HOST_UID=$(id -u) HOST_GID=$(id -g)
   artisan:
     build:
       context: dockerfiles
       dockerfile: php.Dockerfile
+      args:
+        UID: "${HOST_UID:-1000}"
+        GID: "${HOST_GID:-1000}"
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      HOME: /tmp
     volumes:
       - ./src:/var/www/laravel
     entrypoint: ["php", "/var/www/laravel/artisan"]
