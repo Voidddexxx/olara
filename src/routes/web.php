@@ -9,3 +9,10 @@ Route::get('/', function () {
 Route::get('/info', function () {
     phpinfo();
 });
+
+Route::get('/test', function () {
+
+
+    dd(\App\Models\User::find(3)->article);
+        return '';
+});
